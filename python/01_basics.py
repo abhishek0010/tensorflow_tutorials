@@ -1,6 +1,9 @@
-"""Summary of tensorflow basics.
+"""
+Summary of tensorflow basics.
+Created by Parag K. Mital, Jan 2016.
+Modified by Abhishek Kumar , Jan 2020
+"""
 
-Parag K. Mital, Jan 2016."""
 # %% Import tensorflow and pyplot
 import tensorflow as tf
 import matplotlib.pyplot as plt
@@ -15,6 +18,14 @@ import matplotlib.pyplot as plt
 # %% First a tf.Tensor
 n_values = 32
 x = tf.linspace(-3.0, 3.0, n_values)
+
+
+"""
+:-:EAGER EXECUTION ENABLED BY DEFAULT
+(Eager execution is a better approach which uses 
+dynamic computational graph like Pytorch, which
+allows us to do operations with tensors in the 
+more pythonic way)
 
 # %% Construct a tf.Session to execute the graph.
 sess = tf.Session()
@@ -32,6 +43,8 @@ sess = tf.InteractiveSession()
 # %% Now this will work!
 x.eval()
 
+"""
+
 # %% Now a tf.Operation
 # We'll use our values from [-3, 3] to create a Gaussian Distribution
 sigma = 1.0
@@ -40,11 +53,20 @@ z = (tf.exp(tf.negative(tf.pow(x - mean, 2.0) /
                    (2.0 * tf.pow(sigma, 2.0)))) *
      (1.0 / (sigma * tf.sqrt(2.0 * 3.1415))))
 
+"""
+:-:EAGER EXECUTION ENABLED BY DEFAULT
+(Eager execution is a better approach which uses 
+dynamic computational graph like Pytorch, which
+allows us to do operations with tensors in the 
+more pythonic way)
+
 # %% By default, new operations are added to the default Graph
 assert z.graph is tf.get_default_graph()
 
+"""
+
 # %% Execute the graph and plot the result
-plt.plot(z.eval())
+plt.plot(z)
 
 # %% We can find out the shape of a tensor like so:
 print(z.get_shape())
@@ -57,26 +79,26 @@ print(z.get_shape().as_list())
 # we should use the tf.shape fn, which will return a
 # Tensor which can be eval'ed, rather than a discrete
 # value of tf.Dimension
-print(tf.shape(z).eval())
+print(tf.shape(z))
 
 # %% We can combine tensors like so:
-print(tf.stack([tf.shape(z), tf.shape(z), [3], [4]]).eval())
+print(tf.stack([tf.shape(z), tf.shape(z), [3], [4]]))
 
 # %% Let's multiply the two to get a 2d gaussian
-z_2d = tf.matmul(tf.reshape(z, [n_values, 1]), tf.reshape(z, [1, n_values]))
+@tf.function
+def multiply(x, y):
+  return x*y
+
+z_2d = multiply(tf.reshape(z, [n_values, 1]), tf.reshape(z, [1, n_values]))
 
 # %% Execute the graph and store the value that `out` represents in `result`.
-plt.imshow(z_2d.eval())
+plt.imshow(z_2d)
 
 # %% For fun let's create a gabor patch:
 x = tf.reshape(tf.sin(tf.linspace(-3.0, 3.0, n_values)), [n_values, 1])
 y = tf.reshape(tf.ones_like(x), [1, n_values])
 z = tf.multiply(tf.matmul(x, y), z_2d)
-plt.imshow(z.eval())
-
-# %% We can also list all the operations of a graph:
-ops = tf.get_default_graph().get_operations()
-print([op.name for op in ops])
+plt.imshow(z)
 
 # %% Lets try creating a generic function for computing the same thing:
 def gabor(n_values=32, sigma=1.0, mean=0.0):
@@ -92,7 +114,7 @@ def gabor(n_values=32, sigma=1.0, mean=0.0):
     return gabor_kernel
 
 # %% Confirm this does something:
-plt.imshow(gabor().eval())
+plt.imshow(gabor())
 
 # %% And another function which can convolve
 def convolve(img, W):
@@ -120,18 +142,14 @@ def convolve(img, W):
                              strides=[1, 1, 1, 1], padding='SAME')
     return convolved
 
-# %% Load up an image:
 from skimage import data
 img = data.astronaut()
 plt.imshow(img)
-print(img.shape)
 
 # %% Now create a placeholder for our graph which can store any input:
-x = tf.placeholder(tf.float32, shape=img.shape)
+x = tf.convert_to_tensor(img, dtype=tf.float32)
 
 # %% And a graph which can convolve our image with a gabor
 out = convolve(x, gabor())
 
-# %% Now send the image into the graph and compute the result
-result = tf.squeeze(out).eval(feed_dict={x: img})
-plt.imshow(result)
+plt.imshow(tf.squeeze(out))

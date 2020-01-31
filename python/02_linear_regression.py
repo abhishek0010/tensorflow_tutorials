@@ -1,6 +1,9 @@
-"""Simple tutorial for using TensorFlow to compute a linear regression.
+"""
+Simple tutorial for using TensorFlow to compute a linear regression.
+Created by Parag K. Mital, Jan. 2016
+Modified by Abhishek Kumar, Jan 2020
+"""
 
-Parag K. Mital, Jan. 2016"""
 # %% imports
 import numpy as np
 import tensorflow as tf
@@ -17,11 +20,12 @@ ax.scatter(xs, ys)
 fig.show()
 plt.draw()
 
+"""
+:-: NOT FOR EAGER EXECUTION
 # %% tf.placeholders for the input and output of the network. Placeholders are
 # variables which we need to fill in when we are ready to compute the graph.
 X = tf.placeholder(tf.float32)
 Y = tf.placeholder(tf.float32)
-
 # %% We will try to optimize min_(W,b) ||(X*w + b) - y||^2
 # The `Variable()` constructor requires an initial value for the variable,
 # which can be a `Tensor` of any type and shape. The initial value defines the
@@ -77,3 +81,23 @@ with tf.Session() as sess:
         prev_training_cost = training_cost
 fig.show()
 plt.waitforbuttonpress()
+"""
+# %% tf.Models implementation:-
+
+# A single layer, single unit model is created, and trained to adjust weight and bias
+model = tf.keras.Sequential(
+    tf.keras.layers.Dense(units=1, input_shape=[1])
+)
+
+model.compile(loss='mean_squared_error',
+              optimizer=tf.keras.optimizers.Adam(0.01))
+
+
+
+model.fit(ys, xs, epochs=80)
+
+model.predict([-9])
+
+
+# %% For full linear regression implementation refer this:-
+https://heartbeat.fritz.ai/linear-regression-using-tensorflow-2-0-1cd51e211e1f
